@@ -5,7 +5,11 @@ import "./style.css";
 
 class App extends React.Component<
   any,
-  { history: string[]; currentTextInput: string; userName: string }
+  {
+    history: Array<{ userId: string; message: string }>;
+    currentTextInput: string;
+    userName: string;
+  }
 > {
   private socket: SocketIOClient.Socket;
   constructor(props) {
@@ -18,14 +22,16 @@ class App extends React.Component<
   }
   chatWindow: HTMLDivElement;
 
-  addChatToHistory = (newChat: string) => {
+  addChatToHistory = (newChat: { userId: string; message: string }) => {
     const addedToHistory = [...this.state.history, newChat];
     this.setState({
       history: addedToHistory
     });
   };
 
-  initChatWithHistory = (newChat: string[]) => {
+  initChatWithHistory = (
+    newChat: Array<{ userId: string; message: string }>
+  ) => {
     const addedToHistory = [...newChat];
     this.setState({
       history: addedToHistory
@@ -33,9 +39,10 @@ class App extends React.Component<
   };
 
   handleUserConnection = userDetails => {
-    this.addChatToHistory(
-      `User ${userDetails.userId} joined at ${userDetails.connectedAt}`
-    );
+    this.addChatToHistory({
+      message: `${userDetails.userId} joined.`,
+      userId: "SYSTEM"
+    });
   };
 
   handleUserDetails = userDetails => {
@@ -80,7 +87,9 @@ class App extends React.Component<
         <div className="chat-window" ref={node => (this.chatWindow = node)}>
           <ul>
             {this.state.history.map((s, i) => (
-              <li key={`${i}`}>{s}</li>
+              <li key={`${i}`}>
+                {s.userId}: {s.message}
+              </li>
             ))}
           </ul>
         </div>

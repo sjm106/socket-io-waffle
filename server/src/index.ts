@@ -29,16 +29,20 @@ const onUserConnect = (client: socketIo.Socket) => {
 const onUserDisconnect = (clientId: string) => () => {
   const connectedAt = userDetails[clientId].connectedAt as Date;
   const time = (Date.now().valueOf() - connectedAt.valueOf()) / 1000;
-  const message = `User ${
-    userDetails[clientId].userId
-  } disconnected after ${time} seconds.`;
+  const message = {
+    userId: "SYSTEM",
+    message: `${userDetails[clientId].userId} disconnected after ${time}`
+  };
   console.log(message);
   io.emit("broadcastUserDisconnection", message);
 };
 
-const onChatSubmission = (chat: string) => {
+const onChatSubmission = client => (chat: string) => {
   if (chat === "") return;
-  chatHistory.push(chat);
+  chatHistory.push({
+    userId: userDetails[client.id].userId,
+    message: chat
+  });
   io.emit("handleChatHistory", chatHistory);
 };
 
@@ -57,7 +61,7 @@ io.on("connection", client => {
   const onDisconnect = onUserConnect(client);
   client.emit("handleChatHistory", chatHistory);
   client.on("disconnect", onDisconnect);
-  client.on("submitChat", onChatSubmission);
+  client.on("submitChat", onChatSubmission(client));
 });
 
 io.listen(3001);
